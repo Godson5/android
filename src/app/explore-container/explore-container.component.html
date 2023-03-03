@@ -1,4 +1,59 @@
+<mat-spinner *ngIf="data"></mat-spinner>
 <div id="container">
-  <strong>{{ name }}</strong>
-  <p>Explore <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+  <img src="\assets\giphy.gif" alt="" id="1">
+
+  <h2 *ngIf="send">Hello There.....<span></span></h2>
+  <table *ngIf="send">
+
+    <tr>
+      <th>S.NO</th>
+      <th>YOUR ID</th>
+      <th>USERS</th>
+      <th>EMAIL</th>
+      <th>ACTIONS</th>
+    </tr>
+    <tr *ngFor="let item of dsd; let i = index;">
+      <td>{{ i + 1 }}</td>
+      <td>{{ item.id }}</td>
+      <td>{{ item.name }}</td>
+      <td>{{ item.email }}</td>
+      <td><ion-button (click)="editUser(item)">EDIT</ion-button><ion-button
+          (click)="deleteUser(item)">DELETE</ion-button></td>
+    </tr>
+  </table>
+  <div *ngIf="form">
+    <form (ngSubmit)="save()" [formGroup]=formDat *ngIf="form">
+      <ion-item>
+        <ion-label>ID:</ion-label>
+        <ion-input type="text" formControlName="id" name="name"></ion-input>
+        <div *ngIf="formDat.get('id')?.invalid &&formDat.get('id')?.touched" class="ms1"><small>PROVIDE NUMBERS MAX=5
+            MIN=3</small></div>
+        <div *ngIf="formDat.get('id')?.valid" class="valid-input-msg">
+          <ion-icon name="checkmark"></ion-icon>
+        </div>
+      </ion-item>
+      <ion-item>
+        <ion-label>UserName:</ion-label>
+        <ion-input type="text" formControlName="name" name="name"></ion-input>
+        <div *ngIf="formDat.get('name')?.invalid &&formDat.get('name')?.touched" class="ms2"><small>PROVIDE NUMBERS
+            VALID NAME</small></div>
+        <div *ngIf="formDat.get('name')?.valid" class="valid-input-msg">
+          <ion-icon name="checkmark"></ion-icon>
+        </div>
+      </ion-item>
+      <ion-item>
+        <ion-label>Email:</ion-label>
+        <ion-input type="email" formControlName="email" name="email"></ion-input>
+        <div *ngIf="formDat.get('email')?.invalid &&formDat.get('email')?.touched" class="ms3"><small>PROVIDE VALID
+            EMAIL</small></div>
+        <div *ngIf="formDat.get('email')?.valid" class="valid-input-msg">
+          <ion-icon name="checkmark"></ion-icon>
+        </div>
+      </ion-item>
+      <ion-button type="submit">Send</ion-button>
+    </form>
+
+  </div>
+
+
 </div>

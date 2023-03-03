@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "ionic-54aa7": {
+      "hosting": {
+        "app": [
+          "ionic-54aa7"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "ionic-54aa7"
+  }
+}

@@ -1,0 +1,39 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      Edit User
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="formDat">
+    <ion-list>
+      <ion-item>
+        <ion-label position="floating">Name</ion-label>
+        <ion-input type="text" formControlName="name"></ion-input>
+      </ion-item>
+      <ion-item *ngIf="formDat.get('name')?.invalid &&formDat.get('name')?.touched" color="danger">
+        <ion-label>
+          Please enter a valid name.
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Email</ion-label>
+        <ion-input type="email" formControlName="email"></ion-input>
+      </ion-item>
+      <ion-item *ngIf="formDat.get('email')?.invalid &&formDat.get('email')?.touched" color="danger">
+        <ion-label>
+          Please enter a valid email.
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </form>
+
+  <ion-button expand="block" (click)="save(formDat)">
+    Save
+  </ion-button>
+  <ion-button expand="block" (click)="dismiss()">
+    Cancel
+  </ion-button>
+</ion-content>

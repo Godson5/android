@@ -1,11 +1,61 @@
-#container {
+body #container {
   text-align: center;
-
+  //height: 100%;
   position: absolute;
+  //margin-top: 2rem;
+  width: 98%;
   left: 0;
-  right: 0;
-  top: 50%;
+  right: 12%;
+  top: 22%;
   transform: translateY(-50%);
+  display: flex;
+  z-index: 2;
+  //overflow-y: auto;
+  color: black;
+}
+
+#container img{
+  display: flex;
+  width: 100%;
+  height: 90%;
+  z-index: -1;
+  background-size: cover;
+  position: absolute;
+  top: 0%;
+  filter:blur(6px);
+  animation: play-gif 10s steps(1) infinite;
+}
+
+@keyframes play-gif {
+  from { background-position: 0; }
+  to { background-position: 0; }
+}
+
+#container h2{
+  position: relative;
+  top: 0%;
+  margin-left: 1rem;
+  width: 90%;
+  color: black;
+}
+
+#container table {
+  border: 1px solid rgb(16, 16, 16);
+  width: 96%;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: flex-start;
+  border-collapse: collapse;
+  border-radius: 100%;
+  color: black;
+  overflow-x: scroll;
+}
+
+#container th, td{
+  border: 3px solid rgb(181, 177, 177);
+  color: black;
+
+
 }
 
 #container strong {
@@ -24,4 +74,43 @@
 
 #container a {
   text-decoration: none;
+}
+
+.ms1,.ms2,.ms3{
+  animation: invalid-input-animation 1s infinite linear;
+  color: red;
+}
+
+@keyframes invalid-input-animation {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  50% {
+    transform: translateX(10px);
+  }
+  75% {
+    transform: translateX(-10px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.valid-input-msg {
+  color: green;
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+.ng-invalid{
+  border-bottom: 2px red;
+}
+mat-spinner{
+  color: red;
+  z-index: 2;
 }
