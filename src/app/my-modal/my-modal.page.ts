@@ -11,9 +11,7 @@ import {
   collection,
   CollectionReference,
   DocumentData,
-  addDoc,
   updateDoc,
-  getDoc,
   where,
   query,
   getDocs,
@@ -59,8 +57,11 @@ export class MyModalPage {
     this.router.navigateByUrl('/tabs/tab1');
   }
 
-  save(formDat:any) {
-    const form = {name:this.formDat.get('name')?.value,email:this.formDat.get('email')?.value}
+  save() {
+    const form = {
+      name:this.formDat.get('name')?.value,
+     email:this.formDat.get('email')?.value
+    };
     console.log(form);
     
     if (this.formDat.valid) {
@@ -88,9 +89,6 @@ export class MyModalPage {
               });
           });
         })
-        .catch((error: any) => {
-          console.error('Error getting user document:', error);
-        });
     } else {
       // if(this.formDat.get('name')?.value.invalid){
       //   this.nameInvalid = !this.formDat.get('name')?.value.valid;

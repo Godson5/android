@@ -36,24 +36,24 @@ body #container {
   top: 0%;
   margin-left: 1rem;
   width: 90%;
-  color: black;
+ // color: black;
 }
 
 #container table {
-  border: 1px solid rgb(16, 16, 16);
-  width: 96%;
-  margin-left: auto;
-  margin-right: auto;
-  align-items: flex-start;
-  border-collapse: collapse;
-  border-radius: 100%;
-  color: black;
-  overflow-x: scroll;
+  // border: 1px solid rgb(16, 16, 16);
+  // width: 96%;
+  // margin-left: auto;
+  // margin-right: auto;
+  // align-items: flex-start;
+  // border-collapse: collapse;
+  // border-radius: 100%;
+  // color: black;
+  // overflow-x: scroll;
 }
 
 #container th, td{
-  border: 3px solid rgb(181, 177, 177);
-  color: black;
+  // border: 3px solid rgb(181, 177, 177);
+  // color: black;
 
 
 }
@@ -113,4 +113,9 @@ body #container {
 mat-spinner{
   color: red;
   z-index: 2;
+}
+
+#we {
+  width: 50px;
+  height: 50px;
 }

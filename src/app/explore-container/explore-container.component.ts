@@ -5,8 +5,6 @@ import {
   CollectionReference,
   DocumentData,
   addDoc,
-  updateDoc,
-  getDoc,
   where,
   query,
   getDocs,
@@ -14,10 +12,17 @@ import {
 import { collection } from 'firebase/firestore';
 import { Router } from '@angular/router';
 import { MyModalPage } from '../my-modal/my-modal.page';
-import { deleteDoc,  } from 'firebase/firestore';
+import { deleteDoc } from 'firebase/firestore';
 import { ModalController } from '@ionic/angular';
 import { AlertController } from '@ionic/angular';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { Geolocation } from '@capacitor/geolocation';
+import { Camera, CameraResultType, CameraPlugin } from '@capacitor/camera';
 
 interface UserData {
   name: string;
@@ -33,9 +38,9 @@ export class ExploreContainerComponent implements OnInit {
   form: boolean = false;
   nameInvalid: boolean = false;
   emailInvalid: boolean = false;
-  data:boolean = true;
+  data: boolean = true;
   dsd: any = [];
-  formDat:FormGroup = new FormGroup({})
+  formDat: FormGroup = new FormGroup({});
   selectedUser: UserData = { name: '', email: '' };
   //users$: Observable<any[]>;
   @Input() send1?: boolean;
@@ -43,27 +48,33 @@ export class ExploreContainerComponent implements OnInit {
   constructor(
     private fs: Firestore,
     private router: Router,
-    private fb:FormBuilder,
+    private fb: FormBuilder,
     private alrt: AlertController,
     private modalCtrl: ModalController
   ) {
-    console.log(this.formDat);
-    
-    this.formDat =  this.fb.group({
+    this.formDat = this.fb.group({
       id: new FormControl('', [
         Validators.required,
-        Validators.pattern('^[0-9]{3,5}$')
+        Validators.pattern('^[0-9]{3,5}$'),
       ]),
       name: new FormControl('', [
         Validators.required,
-        Validators.minLength(3),Validators.pattern('^[a-zA-Z0-9_.-]*$')
+        Validators.minLength(3),
+        Validators.pattern('^[a-zA-Z0-9_.-]*$'),
       ]),
-      email: new FormControl('', [
-        Validators.required,
-        Validators.email
-      ])
+      email: new FormControl('', [Validators.required, Validators.email]),
+      location: new FormControl(''),
+      Image: new FormControl('')
     });
   }
+  printCurrentPosition = async () => {
+    let coordinates;
+    const position = await Geolocation.getCurrentPosition();
+    const { latitude, longitude } = position.coords;
+    coordinates = { latitude, longitude };
+    console.log('Current position:', coordinates);
+    this.formDat.get('location')?.setValue(JSON.stringify(coordinates));
+  };
 
   ngOnInit(): void {
     if (this.send1) {
@@ -71,7 +82,8 @@ export class ExploreContainerComponent implements OnInit {
       this.get().subscribe((data) => {
         this.dsd = data;
         console.log(data);
-        
+        this.printCurrentPosition();
+        //this.takePicture();
       });
     } else {
       this.form = true;
@@ -90,27 +102,33 @@ export class ExploreContainerComponent implements OnInit {
   //saves data to FireStore
   async save() {
     if (this.formDat.valid) {
+      // Get form data
       const id = this.formDat.get('id')?.value;
       const name = this.formDat.get('name')?.value;
       const email = this.formDat.get('email')?.value;
+      const location = this.formDat.get('location')?.value;
+      const img = this.formDat.get('Image')?.value;
+  
+      // Create data object
       const data = {
         id: id,
         name: name,
-        email:email,
+        email: email,
+        location: location,
+        img: img,
       };
+  
+      // Get Firestore collection reference
       const formdata: CollectionReference<DocumentData> = collection(
         this.fs,
         'formdata'
       );
-      const query1 = query(
-        formdata,
-        where('email', '==', email),
-      );
-      console.log(query1 );
   
       // Check if email already exists in Firestore
+      const query1 = query(formdata, where('email', '==', email));
       const querySnapshot = await getDocs(query1);
       if (querySnapshot.size > 0) {
+        // Email already exists
         this.formDat.reset();
         const alert = await this.alrt.create({
           header: 'Email Already used',
@@ -123,12 +141,9 @@ export class ExploreContainerComponent implements OnInit {
                 console.log('Edit user canceled');
               },
             },
-
           ],
         });
-    
         await alert.present();
-        this.router.navigateByUrl('/tabs/tab1');
         return;
       }
   
@@ -148,110 +163,20 @@ export class ExploreContainerComponent implements OnInit {
     }
   }
   
-  
+
   //edit user
   async editUser(user: any) {
-    // const alert = await this.alrt.create({
-    //   header: 'Edit User',
-    //   inputs: [
-    //     {
-    //       name: 'name',
-    //       type: 'text',
-    //       value: user.name,
-    //       placeholder: 'Name',
-    //       attributes: {
-    //         formControlName: 'name',
-    //       },
-    //       cssClass: this.nameInvalid ? 'ng-invalid' : '',
-    //     },
-    //     {
-    //       name: 'email',
-    //       type: 'email',
-    //       value: user.email,
-    //       placeholder: 'Email',
-    //       attributes: {
-    //         formControlName: 'email',
-    //       },
-    //       cssClass: this.emailInvalid ? 'ng-invalid' : '',
-    //     },
-    //   ],
-    //   buttons: [
-    //     {
-    //       text: 'Cancel',
-    //       role: 'cancel',
-    //       cssClass: 'secondary',
-    //       handler: () => {
-    //         console.log('Edit user canceled');
-    //       },
-    //     },
-    //     {
-    //       text: 'Save',
-    //       handler: (formDat) => {
-    //         this.formDat.statusChanges.subscribe((status:any) => {
-    //           console.log('Form status:', status);
-    //         });
-    //         if(formDat.valid){
-    //           const formdata: CollectionReference<DocumentData> = collection(
-    //             this.fs,
-    //             'formdata'
-    //           );
-    //           console.log('Edit user saved', formDat);
-    //           this.selectedUser = user;
-    //           this.send1 = false;
-    //           const query1 = query(
-    //             formdata,
-    //             where('id', '==', user.id),
-    //           );
-  
-    //           // Get the document ID from the query results and update the document
-    //           getDocs(query1)
-    //             .then((querySnapshot) => {
-    //               querySnapshot.forEach((doc) => {
-    //                 updateDoc(doc.ref, formDat)
-    //                   .then(() => {
-    //                     console.log('User updated successfully');
-    //                     // Reset the form input fields after successful update
-    //                     this.formDat.reset();
-    //                     // Refresh the list of users after update
-    //                     this.get().subscribe((data) => {
-    //                       this.dsd = data;
-    //                     });
-    //                     // Navigate to the user list page after successful update
-    //                     this.router.navigateByUrl('/tabs/tab1');
-    //                     alert.dismiss(); // Dismiss the alert after successful update
-    //                   })
-    //                   .catch((error) => {
-    //                     console.error('Error updating user:', error);
-    //                   });
-    //               });
-    //             })
-    //             .catch((error) => {
-    //               console.error('Error getting user document:', error);
-    //             });
-    //         }
-    //         else{
-    //           this.nameInvalid = !this.formDat.get('name')?.value.valid;
-    //           this.emailInvalid = !this.formDat.get('email')?.value.valid;
-    //         }
-    //       },
-    //     },
-    //   ],
-    // });
-  
-    // await alert.present();
     const modal = await this.modalCtrl.create({
       component: MyModalPage,
       componentProps: {
-        user: user
-      }
+        user: user,
+      },
     });
     await modal.present();
-
   }
-  
-  
- //to delete record
- async deleteUser(user: any) {
+
+  //to delete record
+  async deleteUser(user: any) {
     const alert = await this.alrt.create({
       header: 'Delete User...?',
       buttons: [
@@ -273,16 +198,13 @@ export class ExploreContainerComponent implements OnInit {
             console.log('Edit user saved', formData);
             this.selectedUser = user;
             this.send1 = false;
-            const query1 = query(
-              formdata,
-              where('id', '==', user.id),
-            );
+            const query1 = query(formdata, where('id', '==', user.id));
 
             // Get the document ID from the query results and update the document
             getDocs(query1)
               .then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
-                  deleteDoc(doc.ref, )
+                  deleteDoc(doc.ref)
                     .then(() => {
                       console.log('User updated successfully');
                       // Reset the form input fields after successful update
@@ -311,4 +233,13 @@ export class ExploreContainerComponent implements OnInit {
     await alert.present();
   }
 
+  async takePicture() {
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Base64,
+    });
+    this.formDat.get('Image')?.setValue(image.path);
+  }
+  
 }
