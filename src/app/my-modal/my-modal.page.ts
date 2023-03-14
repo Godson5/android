@@ -64,6 +64,7 @@ export class MyModalPage {
 
   dismiss() {
     this.modalCtrl.dismiss();
+    
     this.router.navigateByUrl('/tabs/tab1');
   }
 
@@ -103,11 +104,10 @@ export class MyModalPage {
               console.log('User updated successfully');
               // Reset the form input fields after successful update
               this.formDat.reset();
+              loading.dismiss()
               // Refresh the list of users after update
               // Navigate to the user list page after successful update
               this.dismiss();
-              this.loadingCtrl.dismiss()
-              this.router.navigateByUrl('tab1')
 
             })
             .catch((error: any) => {

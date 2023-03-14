@@ -166,7 +166,6 @@ export class ExploreContainerComponent implements OnInit {
   async save() {
     const loading = await this.loadingCtrl.create({
       message: 'Uploading Files...',
-      duration: 1000,
       spinner: 'circles',
     });
 
@@ -223,7 +222,7 @@ export class ExploreContainerComponent implements OnInit {
         console.log('Form data saved successfully:', docRef.id);
         // Reset the form input fields after successful submission
         this.formDat.reset();
-        this.loadingCtrl.dismiss();
+        loading.dismiss();
         this.router.navigateByUrl('/tabs/tab1');
       } catch (error) {
         console.error('Error saving form data: ', error);
@@ -232,19 +231,6 @@ export class ExploreContainerComponent implements OnInit {
       alert('Provide correct data and check for the correct types');
     }
   }
-  // } else if (this.storage != null) {
-  //   const formdata: CollectionReference<DocumentData> = collection(
-  //     this.fs,
-  //     'formdata'
-  //   );
-  //   const name = await this.storage.get('formData');
-  //   // const docRef = await addDoc(formdata, name);
-  //   console.log(name);
-  //   const last = await this.storage.remove('formData');
-  // } else {
-  //     alert('Provide correct data and check for the correct types');
-  //   }
-  // }
 
   //edit user
   async editUser(user: any) {
@@ -272,7 +258,14 @@ export class ExploreContainerComponent implements OnInit {
         },
         {
           text: 'Confirm',
-          handler: (formData) => {
+          handler: async (formData) => {
+            const loading = await this.loadingCtrl.create({
+              message: 'Deleting Data...', 
+              spinner: 'circles',
+            });
+
+            loading.present();
+
             const formdata: CollectionReference<DocumentData> = collection(
               this.fs,
               'formdata'
@@ -294,6 +287,7 @@ export class ExploreContainerComponent implements OnInit {
                       // Refresh the list of users after update
                       this.get().subscribe((data) => {
                         this.dsd = data;
+                        loading.dismiss();
                       });
                       // Navigate to the user list page after successful update
                       this.router.navigateByUrl('/tabs/tab1');
@@ -462,5 +456,4 @@ export class ExploreContainerComponent implements OnInit {
     });
     show.present();
   }
-  async fetching() {}
 }
