@@ -1,0 +1,45 @@
+<div *ngIf="">
+  <form (ngSubmit)="save()" [formGroup]=formDat *ngIf="">
+    <img src="" alt="" srcset="">
+    <ion-item>
+      <ion-label>ID:</ion-label>
+      <ion-input type="text" formControlName="id" name="name"></ion-input>
+      <div *ngIf="formDat.get('id')?.invalid &&formDat.get('id')?.touched" class="ms1"><small>PROVIDE NUMBERS MAX=5
+          MIN=3</small></div>
+      <div *ngIf="formDat.get('id')?.valid" class="valid-input-msg">
+        <ion-icon name="checkmark"></ion-icon>
+      </div>
+    </ion-item>
+    <ion-item>
+      <ion-label>UserName:</ion-label>
+      <ion-input type="text" formControlName="name" name="name"></ion-input>
+      <div *ngIf="formDat.get('name')?.invalid &&formDat.get('name')?.touched" class="ms2"><small>PROVIDE NUMBERS
+          VALID NAME</small></div>
+      <div *ngIf="formDat.get('name')?.valid" class="valid-input-msg">
+        <ion-icon name="checkmark"></ion-icon>
+      </div>
+    </ion-item>
+    <ion-item>
+      <ion-label>Email:</ion-label>
+      <ion-input type="email" formControlName="email" name="email"></ion-input>
+      <div *ngIf="formDat.get('email')?.invalid &&formDat.get('email')?.touched" class="ms3"><small>PROVIDE VALID
+          EMAIL</small></div>
+      <div *ngIf="formDat.get('email')?.valid" class="valid-input-msg">
+        <ion-icon name="checkmark"></ion-icon>
+      </div>
+    </ion-item>
+    <ion-item>
+      <ion-label>Your Location</ion-label> 
+      <ion-input type="text" formControlName="location" name="location"></ion-input>
+      <ion-button (click)='printCurrentPosition()'>GEO</ion-button>
+    </ion-item>
+    <ion-item>
+      <ion-label>Your Profile</ion-label> 
+      <ion-input type="text" formControlName="Image" name="img"></ion-input>
+      <ion-button (click)='takePicture()'>Profile</ion-button>
+    </ion-item>
+    <ion-button type="submit">Send</ion-button>
+
+  </form>
+
+</div>

@@ -21,12 +21,25 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { Geolocation } from '@capacitor/geolocation';
-import { Camera, CameraResultType, CameraPlugin } from '@capacitor/camera';
-
+import { Geolocation } from '@ionic-native/geolocation/ngx';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Device } from '@capacitor/device';
+import { Network } from '@capacitor/network';
+import { Storage } from '@ionic/storage';
+import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
+import { ToastController } from '@ionic/angular';
+import { Platform } from '@ionic/angular';
+import { LoadingController } from '@ionic/angular';
 interface UserData {
   name: string;
   email: string;
+}
+export interface UserPhoto {
+  filepath: string;
+  webviewPath: string;
+}
+export class PhotoService {
+  public photos: UserPhoto[] = [];
 }
 @Component({
   selector: 'app-explore-container',
@@ -35,22 +48,32 @@ interface UserData {
 })
 export class ExploreContainerComponent implements OnInit {
   send: boolean = false;
+  UID: any;
   form: boolean = false;
   nameInvalid: boolean = false;
   emailInvalid: boolean = false;
-  data: boolean = true;
+  data: boolean = false;
   dsd: any = [];
   formDat: FormGroup = new FormGroup({});
   selectedUser: UserData = { name: '', email: '' };
-  //users$: Observable<any[]>;
+  sum: any = '';
+  picImage: any; //variable
   @Input() send1?: boolean;
   @Input() form1?: boolean;
+  value: any = '';
+  public photos: UserPhoto[] = [];
   constructor(
     private fs: Firestore,
     private router: Router,
     private fb: FormBuilder,
     private alrt: AlertController,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private storage: Storage,
+    private geolocation: Geolocation,
+    private permissions: AndroidPermissions,
+    public toastController: ToastController,
+    public plt: Platform,
+    private loadingCtrl: LoadingController
   ) {
     this.formDat = this.fb.group({
       id: new FormControl('', [
@@ -63,30 +86,70 @@ export class ExploreContainerComponent implements OnInit {
         Validators.pattern('^[a-zA-Z0-9_.-]*$'),
       ]),
       email: new FormControl('', [Validators.required, Validators.email]),
-      location: new FormControl(''),
-      Image: new FormControl('')
+      location: new FormControl('', Validators.required),
+      Image: new FormControl('', Validators.required),
     });
   }
   printCurrentPosition = async () => {
     let coordinates;
-    const position = await Geolocation.getCurrentPosition();
-    const { latitude, longitude } = position.coords;
-    coordinates = { latitude, longitude };
-    console.log('Current position:', coordinates);
-    this.formDat.get('location')?.setValue(JSON.stringify(coordinates));
+    this.permissions
+      .checkPermission(this.permissions.PERMISSION.ACCESS_COARSE_LOCATION)
+      .then(
+        (result: any) => {
+          if (!result.hasPermission) {
+            this.permissions.requestPermission(
+              this.permissions.PERMISSION.ACCESS_COARSE_LOCATION
+            );
+          }
+        },
+        (err: any) => {
+          this.permissions.requestPermission(
+            this.permissions.PERMISSION.ACCESS_COARSE_LOCATION
+          );
+        }
+      );
+    try {
+      const position = await this.geolocation.getCurrentPosition();
+      const { latitude, longitude } = position.coords;
+      coordinates = { latitude, longitude };
+      console.log('Current position:', coordinates);
+      this.formDat.get('location')?.setValue(JSON.stringify(coordinates));
+    } catch (error: any) {
+      console.log(`the error is`, error);
+      if (error.message === 'User denied Geolocation') {
+        prompt('fds');
+      }
+    }
   };
 
-  ngOnInit(): void {
+  async ngOnInit() {
+    Device.getId().then((uuid) => {
+      this.UID = uuid.uuid;
+      console.log(uuid.uuid);
+    });
+
+    // await this.storage.create();
+    // if (this.storage) {
+    //   await this.save();
+    // }
     if (this.send1) {
       this.send = true;
       this.get().subscribe((data) => {
         this.dsd = data;
-        console.log(data);
-        this.printCurrentPosition();
-        //this.takePicture();
       });
     } else {
       this.form = true;
+    }
+    if (this.dsd.length === 0) {
+      const loading = await this.loadingCtrl.create({
+        message: 'Fetching Data...',
+        duration: 1000,
+        spinner: 'circles',
+      });
+
+      loading.present();
+    } else {
+      this.loadingCtrl.dismiss();
     }
   }
 
@@ -101,14 +164,21 @@ export class ExploreContainerComponent implements OnInit {
 
   //saves data to FireStore
   async save() {
+    const loading = await this.loadingCtrl.create({
+      message: 'Uploading Files...',
+      duration: 1000,
+      spinner: 'circles',
+    });
+
+    loading.present();
     if (this.formDat.valid) {
       // Get form data
       const id = this.formDat.get('id')?.value;
       const name = this.formDat.get('name')?.value;
       const email = this.formDat.get('email')?.value;
       const location = this.formDat.get('location')?.value;
-      const img = this.formDat.get('Image')?.value;
-  
+      const img = this.picImage;
+
       // Create data object
       const data = {
         id: id,
@@ -117,16 +187,16 @@ export class ExploreContainerComponent implements OnInit {
         location: location,
         img: img,
       };
-  
       // Get Firestore collection reference
       const formdata: CollectionReference<DocumentData> = collection(
         this.fs,
         'formdata'
       );
-  
+
       // Check if email already exists in Firestore
       const query1 = query(formdata, where('email', '==', email));
       const querySnapshot = await getDocs(query1);
+      console.log(query1);
       if (querySnapshot.size > 0) {
         // Email already exists
         this.formDat.reset();
@@ -146,15 +216,15 @@ export class ExploreContainerComponent implements OnInit {
         await alert.present();
         return;
       }
-  
+
       try {
         // Creating a new user
         const docRef = await addDoc(formdata, data);
         console.log('Form data saved successfully:', docRef.id);
-  
-        this.router.navigateByUrl('/tabs/tab1');
         // Reset the form input fields after successful submission
         this.formDat.reset();
+        this.loadingCtrl.dismiss();
+        this.router.navigateByUrl('/tabs/tab1');
       } catch (error) {
         console.error('Error saving form data: ', error);
       }
@@ -162,7 +232,19 @@ export class ExploreContainerComponent implements OnInit {
       alert('Provide correct data and check for the correct types');
     }
   }
-  
+  // } else if (this.storage != null) {
+  //   const formdata: CollectionReference<DocumentData> = collection(
+  //     this.fs,
+  //     'formdata'
+  //   );
+  //   const name = await this.storage.get('formData');
+  //   // const docRef = await addDoc(formdata, name);
+  //   console.log(name);
+  //   const last = await this.storage.remove('formData');
+  // } else {
+  //     alert('Provide correct data and check for the correct types');
+  //   }
+  // }
 
   //edit user
   async editUser(user: any) {
@@ -238,8 +320,147 @@ export class ExploreContainerComponent implements OnInit {
       quality: 90,
       allowEditing: false,
       resultType: CameraResultType.Base64,
+      source: CameraSource.Prompt,
     });
-    this.formDat.get('Image')?.setValue(image.path);
+    this.picImage = 'data:image/jpeg;base64,' + image.base64String;
+    console.log(image);
+    this.formDat.get('Image')?.setValue(`${image.format}`);
+    if (image) {
+      //his.saveImage(image);
+    }
   }
-  
+
+  async saveIt() {}
+
+  async toLcl() {
+    if (this.formDat.valid) {
+      // Get form data
+      const id = this.formDat.get('id')?.value;
+      const name = this.formDat.get('name')?.value;
+      const email = this.formDat.get('email')?.value;
+      const location = this.formDat.get('location')?.value;
+      const img = this.formDat.get('Image')?.value;
+
+      // Create data object
+      const data = {
+        id: id,
+        name: name,
+        email: email,
+        location: location,
+        img: img,
+      };
+      // Get Firestore collection reference
+      const formdata: CollectionReference<DocumentData> = collection(
+        this.fs,
+        'formdata'
+      );
+
+      // Check if email already exists in Firestore
+      const query1 = query(formdata, where('email', '==', email));
+      const querySnapshot = await getDocs(query1);
+      if (querySnapshot.size > 0) {
+        // Email already exists
+        this.formDat.reset();
+        const alert = await this.alrt.create({
+          header: 'Email Already used',
+          buttons: [
+            {
+              text: 'Cancel',
+              role: 'cancel',
+              cssClass: 'secondary',
+              handler: () => {
+                console.log('Edit user canceled');
+              },
+            },
+          ],
+        });
+        await alert.present();
+        return;
+      }
+
+      try {
+        // Creating a new user
+        const logCurrentNetworkStatus = async () => {
+          const status = await Network.getStatus();
+
+          console.log('Network status:', status);
+          return status;
+        };
+        let statusN = logCurrentNetworkStatus();
+        if ((await statusN).connected == true) {
+          const docRef = await addDoc(formdata, data);
+          console.log('Form data saved successfully:', docRef.id);
+
+          this.router.navigateByUrl('/tabs/tab1');
+          // Reset the form input fields after successful submission
+          this.formDat.reset();
+          return;
+        } else {
+          this.storage.set('formData', data);
+          console.log(this.storage);
+          this.router.navigateByUrl('/tabs/tab1');
+          // Reset the form input fields after successful submission
+          this.formDat.reset();
+          return;
+        }
+      } catch (error) {
+        console.error('Error saving form data: ', error);
+      }
+    }
+  }
+
+  async handleRefresh(event: any) {
+    let sum;
+    console.log(sum);
+    await this.storage.get('formData').then((data) => (sum = data));
+    if (sum != undefined) {
+      const formdata: CollectionReference<DocumentData> = collection(
+        this.fs,
+        'formdata'
+      );
+      const name = await this.storage.get('formData');
+      const docRef = await addDoc(formdata, name);
+      console.log(name);
+      const last = await this.storage.remove('formData');
+    }
+
+    event.target.complete();
+  }
+
+  async showImg(path: string, name: string) {
+    console.log(this.picImage);
+    const show = await this.toastController.create({
+      //message: `<img id='img'src="${path}" style="width: 40px;
+      // height: 40px;">Welcome ${name.toUpperCase()}..!`,
+      duration: 1000000,
+      position: 'top',
+      cssClass: 'new',
+      icon: path,
+      buttons: [
+        {
+          text: '❌',
+          role: 'cancel',
+        },
+      ],
+    });
+    show.present();
+  }
+
+  async showUid() {
+    Device.getId().then((uuid) => console.log(uuid));
+    const show = await this.toastController.create({
+      message: `You'r UUID is:${JSON.stringify(this.UID)}..!`,
+      duration: 300000,
+      position: 'top',
+      cssClass: 'new',
+      buttons: [
+        {
+          text: '❌',
+          role: 'cancel',
+        },
+      ],
+    });
+    show.present();
+  }
+  async fetching() {}
 }

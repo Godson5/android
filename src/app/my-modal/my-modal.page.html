@@ -27,6 +27,26 @@
           Please enter a valid email.
         </ion-label>
       </ion-item>
+      <ion-item>
+        <ion-label position="floating">location</ion-label>
+        <ion-input type="img" formControlName="location" name="location"></ion-input>
+        <ion-button (click)='printCurrentPosition()'>Location</ion-button>
+      </ion-item>
+      <ion-item *ngIf="formDat.get('location')?.invalid &&formDat.get('location')?.touched" color="danger">
+        <ion-label>
+          Please enter a valid name.
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Image</ion-label>
+        <ion-input type="text" formControlName="Image" name="Image"></ion-input>
+        <ion-button (click)=' takePicture()'>Image</ion-button>
+      </ion-item>
+      <ion-item *ngIf="formDat.get('Image')?.invalid &&formDat.get('Image')?.touched" color="danger">
+        <ion-label>
+          Please enter a valid name.
+        </ion-label>
+      </ion-item>
     </ion-list>
   </form>
 

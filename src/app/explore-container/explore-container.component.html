@@ -1,30 +1,29 @@
 <mat-spinner *ngIf="data"></mat-spinner>
+<ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+  <ion-refresher-content></ion-refresher-content>
+</ion-refresher>
 <div id="container">
-  <!-- <img src="\assets\giphy.gif" alt="" id="1"> -->
+  <!-- <img src="\assets\giphy.gif" alt="" class="he"> -->
 
-  <h2 *ngIf="send">Hello There.....<span></span></h2>
-  <table *ngIf="send">
+  <h2 *ngIf="send">Hello There.....<span><ion-button id="show" (click)="showUid()">UUID</ion-button></span></h2>
 
-    <tr>
-      <th>S.NO</th>
-      <th>YOUR ID</th>
-      <th>USERS</th>
-      <th>EMAIL</th>
-      <th>Location</th>
-      <th>Image</th>
-      <th>ACTIONS</th>
-    </tr>
-    <tr *ngFor="let item of dsd; let i = index;">
-      <td>{{ i + 1 }}</td>
-      <td>{{ item.id }}</td>
-      <td>{{ item.name }}</td>
-      <td>{{ item.email }}</td>
-      <td>{{ item.location }}</td>
-      <td id="we"><img [src]="item.img"></td>
-      <td><ion-button (click)="editUser(item)">EDIT</ion-button><ion-button
-          (click)="deleteUser(item)">DELETE</ion-button></td>
-    </tr>
-  </table>
+  <div *ngFor="let item of dsd">
+    <ion-card>
+      <img alt="Silhouette of mountains" [src]="item.img" />
+      <ion-card-header>
+        <ion-card-title>Name: {{item.name}}</ion-card-title>
+        <ion-card-subtitle>Email:{{item.email}}</ion-card-subtitle>
+        <ion-card-subtitle>Location:{{item.location}}</ion-card-subtitle>
+        <ion-button (click)="editUser(item)">EDIT</ion-button><ion-button (click)="deleteUser(item)">DELETE</ion-button>
+      </ion-card-header>
+      
+
+      <ion-card-content>
+        POPUP:<ion-button (click)="showImg(item.img,item.name)">Your Pic</ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
   <div *ngIf="form">
     <form (ngSubmit)="save()" [formGroup]=formDat *ngIf="form">
       <img src="" alt="" srcset="">
@@ -56,16 +55,18 @@
         </div>
       </ion-item>
       <ion-item>
-        <ion-label>Your Location</ion-label> 
+        <ion-label>Your Location</ion-label>
         <ion-input type="text" formControlName="location" name="location"></ion-input>
         <ion-button (click)='printCurrentPosition()'>GEO</ion-button>
       </ion-item>
       <ion-item>
-        <ion-label>Your Profile</ion-label> 
-        <ion-input type="img" formControlName="Image" name="location"></ion-input>
+        <ion-label>Your Profile</ion-label>
+        <ion-input type="text" formControlName="Image" name="img"></ion-input>
         <ion-button (click)='takePicture()'>Profile</ion-button>
       </ion-item>
+      <ion-button (click)='toLcl()' [disabled]="true">To LocalStore</ion-button>
       <ion-button type="submit">Send</ion-button>
+
     </form>
 
   </div>

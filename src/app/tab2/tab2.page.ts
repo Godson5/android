@@ -9,7 +9,7 @@ import { ActivatedRoute } from '@angular/router';
 export class Tab2Page{
  @Input() formData: any = {};
 
-  constructor(private route: ActivatedRoute) {  }
+  constructor() {  }
 
   ngOnInit() {
    
