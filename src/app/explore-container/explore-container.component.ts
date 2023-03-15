@@ -41,6 +41,7 @@ export interface UserPhoto {
 export class PhotoService {
   public photos: UserPhoto[] = [];
 }
+
 @Component({
   selector: 'app-explore-container',
   templateUrl: './explore-container.component.html',
@@ -127,29 +128,22 @@ export class ExploreContainerComponent implements OnInit {
       this.UID = uuid.uuid;
       console.log(uuid.uuid);
     });
+    const loading = await this.loadingCtrl.create({
+      message: 'Fetching Data...',
+      duration: 1000,
+      spinner: 'circles',
+    });
 
-    // await this.storage.create();
-    // if (this.storage) {
-    //   await this.save();
-    // }
+    loading.present();
+
     if (this.send1) {
       this.send = true;
       this.get().subscribe((data) => {
         this.dsd = data;
+        loading.dismiss();
       });
     } else {
       this.form = true;
-    }
-    if (this.dsd.length === 0) {
-      const loading = await this.loadingCtrl.create({
-        message: 'Fetching Data...',
-        duration: 1000,
-        spinner: 'circles',
-      });
-
-      loading.present();
-    } else {
-      this.loadingCtrl.dismiss();
     }
   }
 
@@ -260,7 +254,7 @@ export class ExploreContainerComponent implements OnInit {
           text: 'Confirm',
           handler: async (formData) => {
             const loading = await this.loadingCtrl.create({
-              message: 'Deleting Data...', 
+              message: 'Deleting Data...',
               spinner: 'circles',
             });
 
